@@ -39,11 +39,11 @@ clc
 oi = oiCreate; %human optics
 oi = oiSet(oi,'hfov',hFOV); % set teh field of view of the eye
 %oiGet(oi, 'hfov') %make sure it was set
-aperture = 4e-3; %human pupil diameter
+aperture = 2e-3; %human pupil diameter
 focal_length = 17e-3; % human focal length
 fNumber = focal_length / aperture; %human fNumber
 oi  = oiSet(oi,'optics fNumber',fNumber); %set the fNumber
-%oiGet(oi, 'optics fNumber') %make sure it was set
+oiGet(oi, 'optics fNumber') %make sure it was set
 'done'
 %% compute the optical image of each scene
 clc
@@ -51,21 +51,22 @@ opticalImages = figure;
 for i = 1:numScenes
     oiComputed{i} = oiCompute(oi,scenes{i}); % image the scene
     % Let's have a look
-    subplot(1, numScenes, i)
+    %subplot(1, numScenes, i)
+    figure;
     oiComputedImages{i} = oiShowImage(oiComputed{i});
 
 end
 'done'
 
 %% optical flow the retinal images
-opticFlow = opticalFlowHS;
-reset(opticFlow);
-for i = 1:numScenes
-    flow{i} = estimateFlow(opticFlow,rgb2gray(oiComputedImages{i}));
-    flowPlot{i} = figure;
-    plot(flow{i}, 'ScaleFactor', 100)
-    title(['Optical flow at image', num2str(i)])
-end
+% opticFlow = opticalFlowHS;
+% reset(opticFlow);
+% for i = 1:numScenes
+%     flow{i} = estimateFlow(opticFlow,rgb2gray(oiComputedImages{i}));
+%     flowPlot{i} = figure;
+%     plot(flow{i}, 'ScaleFactor', 100)
+%     title(['Optical flow at image', num2str(i)])
+% end
 
 
 %% Now, let's compute the cone absorptions for a sample human retina
@@ -89,21 +90,26 @@ end
 'done'
 %%
 clc
+filt = fspecial('gaussian', 10, 3);
 for i = 1:numScenes
     imRescaled{i} = retinaVolts{i}./max(max(retinaVolts{i}));
     bwImages{i} = im2bw(imRescaled{i}, graythresh(imRescaled{i}));
     bwImages{i} = imfill(bwImages{i},'holes');
+    bwImages{i} = imfilter(bwImages{i}, filt);
+    imshow(bwImages{i});
     centers{i} = regionprops(bwImages{i},'Centroid');
-    xCenter(i) = centers{i}(1).Centroid(1);
+    %xCenter(i) = centers{i}(1).Centroid(1)
 end
 
-coneDifference = diff(xCenter) % in cones
+zeroDegree_near = centers{1}(1).Centroid(1);
+zeroDegree_far = centers{1}(2).Centroid(1);
 
-%%
+for i = 2:numScenes
+    nearShift(i) = abs(centers{i}(1).Centroid(1) - zeroDegree_near);
+    farShift(i) = abs(centers{i}(2).Centroid(1) - zeroDegree_far);
+    deltaShift(i) = abs(farShift(i) - nearShift(i));
+end
 
-%delta = img - imgShifted;
-fused = imfuse(img, imgShifted );
-%numBins = 5;
-%fusedEq = histeq(fused,numBins);
-imtool(fused)
-
+nearShift
+farShift
+deltaShift
