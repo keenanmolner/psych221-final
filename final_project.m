@@ -39,7 +39,7 @@ clc
 oi = oiCreate; %human optics
 oi = oiSet(oi,'hfov',hFOV); % set teh field of view of the eye
 %oiGet(oi, 'hfov') %make sure it was set
-aperture = 2e-3; %human pupil diameter
+aperture = 4e-3; %human pupil diameter
 focal_length = 17e-3; % human focal length
 fNumber = focal_length / aperture; %human fNumber
 oi  = oiSet(oi,'optics fNumber',fNumber); %set the fNumber
